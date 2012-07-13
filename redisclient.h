@@ -721,6 +721,16 @@ namespace redis
         commands[i].set_reply( recv_generic_reply_(cmd_socket) );
       }
     }
+
+    void watch(const string_type & key)
+    {
+      if( connections_.size() > 1 )
+        throw std::runtime_error("feature is not available in cluster mode");
+
+      int socket = connections_[0].socket;
+      send_(socket, makecmd("WATCH") << key);
+      recv_ok_reply_(socket);
+    }
     
     void mget(const string_vector & keys, string_vector & out)
     {
