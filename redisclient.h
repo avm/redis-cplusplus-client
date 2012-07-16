@@ -59,6 +59,7 @@
 
 #define REDIS_LBR                       "\r\n"
 #define REDIS_STATUS_REPLY_OK           "OK"
+#define REDIS_STATUS_REPLY_PONG         "PONG"
 #define REDIS_PREFIX_STATUS_REPLY_ERROR "-ERR "
 #define REDIS_PREFIX_STATUS_REPLY_ERR_C '-'
 #define REDIS_PREFIX_STATUS_REPLY_VALUE '+'
@@ -508,6 +509,17 @@ namespace redis
     const std::vector<connection_data> & connections() const
     {
       return connections_;
+    }
+
+    void ping()
+    {
+      if( connections_.size() > 1 )
+        throw std::runtime_error("feature is not available in cluster mode");
+
+      int socket = connections_[0].socket;
+      send_(socket, makecmd("PING"));
+      if (recv_single_line_reply_(socket) != REDIS_STATUS_REPLY_PONG)
+        throw protocol_error("expected a PONG response");
     }
     
     void auth(const string_type & pass)
